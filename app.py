@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 # YOLO v3 model yükleme
 model = torch.hub.load('ultralytics/yolov5', 'yolov3', pretrained=True)
-
+# git deneme
 @app.route('/process-image', methods=['POST'])
 def process_image():
     if 'image' not in request.files:
