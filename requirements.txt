@@ -1,5 +1,5 @@
 flask
+torch
 opencv-python
 numpy
-torch
-torchvision
+ultralytics
