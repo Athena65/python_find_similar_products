@@ -32,3 +32,5 @@ Ensure the following are installed on your system:
 ```bash
 git clone https://github.com/your-repo/python_find_similar_products.git
 cd python_find_similar_products
+Add this to folder shown on image : https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8x-oiv7.pt
+![image](https://github.com/user-attachments/assets/5673cdee-2ccb-4b17-a4ee-47958a86b049)
