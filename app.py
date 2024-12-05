@@ -1,79 +1,69 @@
-import sys
-sys.path.append('C:/bitirmetezi-ratesfromeverywhere/python_scripts/yolov3')  # Yol ekleme
-import json
 from flask import Flask, request, jsonify
 import cv2
 import numpy as np
-import torch
-from yolov3.models.experimental import attempt_load
-from yolov3.utils.general import non_max_suppression, scale_boxes
-from yolov3.utils.torch_utils import select_device
+from ultralytics import YOLO
 
 app = Flask(__name__)
 
-# YOLOv3 model yükleme
-device = select_device('')
-weights_path = 'yolov3/weights/yolov3.pt'
-model = attempt_load(weights_path, device=device)
-model.eval()
+# Load YOLOv8 model
+MODEL_PATH = 'weights/yolov8x-oiv7.pt'  # Replace with your desired YOLOv8 weights file
+model = YOLO(MODEL_PATH)
 
 @app.route('/process-image', methods=['POST'])
 def process_image():
     import json
 
-    # Tüm alt kategorileri alın
+    # Retrieve all subcategories from the request
     all_subcategories = json.loads(request.form.get('all_subcategories', '[]'))
 
-    # Resmi al ve işle
+    # Validate that an image is provided in the request
     if 'image' not in request.files:
+        app.logger.error('No image provided in the request.')
         return jsonify({'categories': []}), 200
 
+    # Read and decode the image
     file = request.files['image']
     img = cv2.imdecode(np.frombuffer(file.read(), np.uint8), cv2.IMREAD_COLOR)
+    if img is None:
+        app.logger.error('Failed to decode the image.')
+        return jsonify({'categories': []}), 200
 
-    # Görüntü ön işleme
+    # Preprocess the image for YOLOv8
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, (640, 640))
-    img = torch.from_numpy(img).float()
-    img = img.permute(2, 0, 1) / 255.0
-    img = img.unsqueeze(0)
 
-    # YOLO ile tahmin yap
-    with torch.no_grad():
-        results = model(img)
+    # Perform YOLOv8 inference
+    try:
+        results = model.predict(img, conf=0.2, iou=0.1)
+    except Exception as e:
+        app.logger.error(f'Error during YOLOv8 inference: {e}')
+        return jsonify({'categories': []}), 200
 
-    # Tahmin sonuçlarını işleme
-    if isinstance(results, tuple):
-        predictions = results[0]
-    else:
-        predictions = results
+    # Log the raw YOLOv8 output
+    app.logger.info(f'YOLOv8 Results: {results}')  # Logs the results object
 
-    # Non-Max Suppression (NMS)
-    predictions = non_max_suppression(predictions, conf_thres=0.4, iou_thres=0.5)
-
-    # Kategorileri işle
+    # Process YOLOv8 predictions
     detected_categories = []
-    for det in predictions:
-        if det is not None and len(det):
-            for *xyxy, conf, cls in det:
-                category_id = int(cls)
-                confidence = float(conf)
-                if category_id < len(all_subcategories):
-                    detected_categories.append((all_subcategories[category_id], confidence))
+    for result in results:
+        for box in result.boxes:
+            category_id = int(box.cls[0])  # Class ID
+            confidence = float(box.conf[0])  # Confidence score
+            app.logger.info(f"Detected: {box.cls[0]}, Confidence: {box.conf[0]}")
 
-    # En yüksek güven skoru olan kategoriyi seç
+            # Map category_id to COCO category name
+            if category_id in result.names:  # Check if category_id exists in names mapping
+                detected_categories.append((result.names[category_id], confidence))
+
+    # Select the category with the highest confidence
     detected_categories = sorted(detected_categories, key=lambda x: x[1], reverse=True)
     best_category = detected_categories[0][0] if detected_categories else None
 
-    # Kategori bulunamazsa boş liste döndür
+    # Return the result
     if not best_category:
-        return jsonify({'categories': []}), 200
+        app.logger.info('No matching category found.')
+        return jsonify({'categories': [], 'yolo_output': str(results)}), 200
 
-    return jsonify({'categories': [best_category]})
-
-
-
-
+    app.logger.info(f'Best category detected: {best_category}')
+    return jsonify({'categories': [best_category], 'yolo_output': str(results)})
 
 
 if __name__ == '__main__':
