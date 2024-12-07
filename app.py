@@ -14,7 +14,7 @@ def process_image():
     import json
 
     # Retrieve all subcategories from the request
-    all_subcategories = json.loads(request.form.get('all_subcategories', '[]'))
+    # all_subcategories = json.loads(request.form.get('all_subcategories', '[]'))
 
     # Validate that an image is provided in the request
     if 'image' not in request.files:
@@ -39,31 +39,41 @@ def process_image():
         return jsonify({'categories': []}), 200
 
     # Log the raw YOLOv8 output
-    app.logger.info(f'YOLOv8 Results: {results}')  # Logs the results object
+    # app.logger.info(f'YOLOv8 Results: {results}')  # Logs the results object
 
     # Process YOLOv8 predictions
-    detected_categories = []
+    detected_category_ids = []
+    detected_categories = []  # category ids for logging
+
     for result in results:
         for box in result.boxes:
             category_id = int(box.cls[0])  # Class ID
             confidence = float(box.conf[0])  # Confidence score
-            app.logger.info(f"Detected: {box.cls[0]}, Confidence: {box.conf[0]}")
+            # app.logger.info(f"Detected: {box.cls[0]}, Confidence: {box.conf[0]}")
 
             # Map category_id to COCO category name
             if category_id in result.names:  # Check if category_id exists in names mapping
+                detected_category_ids.append((category_id, confidence))
                 detected_categories.append((result.names[category_id], confidence))
 
-    # Select the category with the highest confidence
+    # Select the category with the highest confidence (category ids)
+    detected_category_ids = sorted(detected_category_ids, key=lambda x: x[1], reverse=True)
+    best_category_ids = detected_category_ids[0][0] if detected_category_ids else None
+
+    # Select the category with the highest confidence (category names for logging)
     detected_categories = sorted(detected_categories, key=lambda x: x[1], reverse=True)
-    best_category = detected_categories[0][0] if detected_categories else None
+    best_category = detected_categories[0][0] if detected_category_ids else None
 
     # Return the result
     if not best_category:
         app.logger.info('No matching category found.')
         return jsonify({'categories': [], 'yolo_output': str(results)}), 200
 
+    # log category name
     app.logger.info(f'Best category detected: {best_category}')
-    return jsonify({'categories': [best_category], 'yolo_output': str(results)})
+
+    #return category id
+    return jsonify({'categories': [best_category_ids], 'yolo_output': str(results)})
 
 
 if __name__ == '__main__':
