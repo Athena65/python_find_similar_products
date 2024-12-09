@@ -6,7 +6,7 @@ from ultralytics import YOLO
 app = Flask(__name__)
 
 # Load YOLOv8 model
-MODEL_PATH = 'weights/yolov8x-oiv7.pt'  # Replace with your desired YOLOv8 weights file
+MODEL_PATH = 'weights/yolov8x-oiv7.pt'  # Yolov8 trained dataset
 model = YOLO(MODEL_PATH)
 
 
