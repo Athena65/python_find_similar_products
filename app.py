@@ -9,12 +9,10 @@ app = Flask(__name__)
 MODEL_PATH = 'weights/yolov8x-oiv7.pt'  # Replace with your desired YOLOv8 weights file
 model = YOLO(MODEL_PATH)
 
+
 @app.route('/process-image', methods=['POST'])
 def process_image():
     import json
-
-    # Retrieve all subcategories from the request
-    # all_subcategories = json.loads(request.form.get('all_subcategories', '[]'))
 
     # Validate that an image is provided in the request
     if 'image' not in request.files:
@@ -38,21 +36,18 @@ def process_image():
         app.logger.error(f'Error during YOLOv8 inference: {e}')
         return jsonify({'categories': []}), 200
 
-    # Log the raw YOLOv8 output
-    # app.logger.info(f'YOLOv8 Results: {results}')  # Logs the results object
 
     # Process YOLOv8 predictions
-    detected_category_ids = []
-    detected_categories = []  # category ids for logging
+    detected_category_ids = [] # category id to return
+    detected_categories = []  # category names for logging
 
     for result in results:
         for box in result.boxes:
             category_id = int(box.cls[0])  # Class ID
             confidence = float(box.conf[0])  # Confidence score
-            # app.logger.info(f"Detected: {box.cls[0]}, Confidence: {box.conf[0]}")
 
-            # Map category_id to COCO category name
-            if category_id in result.names:  # Check if category_id exists in names mapping
+            # Map category_id to OpenImagesV7 dataset category name
+            if category_id in result.names:  # Check if category_id, category_name exists in dataset
                 detected_category_ids.append((category_id, confidence))
                 detected_categories.append((result.names[category_id], confidence))
 
@@ -60,7 +55,7 @@ def process_image():
     detected_category_ids = sorted(detected_category_ids, key=lambda x: x[1], reverse=True)
     best_category_ids = detected_category_ids[0][0] if detected_category_ids else None
 
-    # Select the category with the highest confidence (category names for logging)
+    # Select the category with the highest confidence (category id to return and category name for logging)
     detected_categories = sorted(detected_categories, key=lambda x: x[1], reverse=True)
     best_category = detected_categories[0][0] if detected_category_ids else None
 
@@ -72,9 +67,10 @@ def process_image():
     # log category name
     app.logger.info(f'Best category detected: {best_category}')
 
-    #return category id
+    # return category id
     return jsonify({'categories': [best_category_ids], 'yolo_output': str(results)})
 
 
+# Set port to 5000 for API request
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
