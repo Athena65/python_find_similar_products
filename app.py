@@ -31,7 +31,7 @@ def process_image():
 
     # Perform YOLOv8 inference
     try:
-        results = model.predict(img, conf=0.2, iou=0.1)
+        results = model.predict(img, conf=0.25, iou=0.45) # conf : confidence threshold -> 0.25 , iou(Intersection over Union threshold) : 0.45 -> suggested for Yolo models
     except Exception as e:
         app.logger.error(f'Error during YOLOv8 inference: {e}')
         return jsonify({'categories': []}), 200
