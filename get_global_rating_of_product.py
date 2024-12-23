@@ -7,7 +7,7 @@ import pytesseract
 
 # URLS to fetch datas
 BASE_URLS = [
-    "https://www.hepsiburada.com/",
+    "https://www.cimri.com/",
     "https://www.trendyol.com/",
     "https://www.n11.com/"
 ]
@@ -18,31 +18,35 @@ def get_product_url(base_url, product_name):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
     }
-    """Ürün adını arayıp ürün detay sayfasının URL'sini alır."""
-    if "hepsiburada" in base_url:
-        search_url = f"{base_url}ara?q={product_name.replace(' ', '+')}"
+
+    # Arama URL'si
+    if "cimri" in base_url:
+        search_url = f"{base_url}arama?q={product_name.replace(' ', '+')}"
+        product_class = 'HorizontalProductCard_container__n8bDp'
     elif "trendyol" in base_url:
         search_url = f"{base_url}sr?q={product_name.replace(' ', '+')}"
+        product_class = 'p-card-wrppr'
     elif "n11" in base_url:
         search_url = f"{base_url}arama?q={product_name.replace(' ', '+')}"
+        product_class = 'pro'
     else:
         raise Exception("Desteklenmeyen bir URL")
 
+    # HTML'den ürün linkini al
     response = requests.get(search_url, headers=headers, timeout=10)
     soup = BeautifulSoup(response.content, 'html.parser')
 
-    product_link = None
-    if "hepsiburada" in base_url:
-        product_link = soup.find('a', {'class': 'product-card-wrapper'})['href']
-    elif "trendyol" in base_url:
-        product_link = soup.find('a', {'class': 'p-card-wrppr'})['href']
-    elif "n11" in base_url:
-        product_link = soup.find('a', {'class': 'pro'})['href']
-
-    if not product_link:
+    # Ürün detay linkini bul
+    link_element = soup.find('a', {'class': product_class})
+    if link_element:
+        product_link = link_element.get('href')
+    else:
         raise Exception(f"Ürün linki bulunamadı: {base_url}")
 
-    return base_url + product_link
+    # Tam URL'yi döndür
+    if not product_link.startswith("http"):
+        return base_url.strip('/') + product_link
+    return product_link
 
 
 def capture_screenshot(product_url, output_file='product_screenshot.png'):

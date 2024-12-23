@@ -37,20 +37,25 @@ def process_image_route():
 # global rating
 @app.route('/get_global_rating', methods=['POST'])
 def get_global_rating_endpoint():
-    """Ürün adını alır ve tüm sitelerin değerlendirme bilgilerini döndürür."""
+    """Ürün adını alır ve tüm sitedlerin değerlendirme bilgilerini döndürür."""
     try:
+        app.logger.info('POST request received at /get_global_rating')
         data = request.get_json()
+        app.logger.info(f'Received data: {data}')
+
         product_name = data.get('product_name')
 
         if not product_name:
+            app.logger.error('Product name is missing in the request.')
             return jsonify({"error": "Product name is required"}), 400
 
         # get_global_rating_of_product.py'deki fonksiyonu çağır
         rating_info = get_global_rating(product_name)
+        app.logger.info(f'Returned rating info: {rating_info}')
         return jsonify(rating_info), 200
     except Exception as e:
+        app.logger.error(f'Error: {str(e)}')
         return jsonify({"error": str(e)}), 500
-
 
 
 # port ayarlama
