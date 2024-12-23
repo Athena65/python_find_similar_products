@@ -34,22 +34,22 @@ def process_image_route():
     return jsonify({'categories': [best_category_ids], 'yolo_output': str(results)})
 
 
-# global rating - method changed!
-# @app.route('/get_global_rating', methods=['POST'])
-# def get_global_rating_endpoint():
-#     """Ürün adını alır ve tüm sitelerin değerlendirme bilgilerini döndürür."""
-#     try:
-#         data = request.get_json()
-#         product_name = data.get('product_name')
-#
-#         if not product_name:
-#             return jsonify({"error": "Product name is required"}), 400
-#
-#         # get_global_rating_of_product.py'deki fonksiyonu çağır
-#         rating_info = get_global_rating(product_name)
-#         return jsonify(rating_info), 200
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
+# global rating
+@app.route('/get_global_rating', methods=['POST'])
+def get_global_rating_endpoint():
+    """Ürün adını alır ve tüm sitelerin değerlendirme bilgilerini döndürür."""
+    try:
+        data = request.get_json()
+        product_name = data.get('product_name')
+
+        if not product_name:
+            return jsonify({"error": "Product name is required"}), 400
+
+        # get_global_rating_of_product.py'deki fonksiyonu çağır
+        rating_info = get_global_rating(product_name)
+        return jsonify(rating_info), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 
