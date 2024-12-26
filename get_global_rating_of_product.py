@@ -63,22 +63,56 @@ def capture_screenshot(product_url, output_file='product_screenshot.png'):
     return output_file
 
 def extract_rating_from_image(image_path):
-    """Görüntüden yıldız ve yorum bilgilerini ayıklar."""
+    """Görüntüden ürün kategorisi, yıldız, değerlendirme ve yorum bilgilerini çıkarır."""
+    # Tesseract OCR'nin sistemdeki yolunu belirtiyoruz
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
+    # Görseli yükleyin
     image = cv2.imread(image_path)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    # Tesseract ile OCR işlemi
-    text = pytesseract.image_to_string(gray, lang='eng')
+    # Görüntüyü işleyerek daha keskin hale getirin
+    _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
 
-    # Değerlendirme bilgilerini bul
-    rating, reviews = None, None
+    # OCR ile metni ayıklayın
+    text = pytesseract.image_to_string(thresh, lang='eng')
+    print("OCR Çıktısı:", text)  # Debug için çıktıyı yazdır
+
+    # Veriyi ayıklamak için değişkenler
+    product_category = None
+    rating_value = None
+    reviews = None
+
+    # Satır satır tarama
     for line in text.split('\n'):
-        if "stars" in line.lower():  # Yıldız bilgisi
-            rating = line.split()[0]
-        if "reviews" in line.lower() or "yorum" in line.lower():  # Yorum sayısı
-            reviews = line.split()[0]
+        line = line.strip()
+        if not line:
+            continue
 
-    return rating, reviews
+        # Ürün kategorisini kontrol et
+        if line.isalpha():  # Eğer sadece harflerden oluşuyorsa
+            product_category = line
+
+        # Değerlendirme puanını ve yorum sayısını kontrol et
+        if "yorum" in line.lower():
+            try:
+                parts = line.split()
+                for part in parts:
+                    if part.replace('.', '', 1).isdigit():  # Puan için
+                        if not rating_value:  # İlk bulunan değeri al
+                            rating_value = part
+                    elif part.isdigit():  # Yorum sayısı için
+                        reviews = part
+            except ValueError as e:
+                print(f"Hata: {e} - Satır: {line}")
+                continue
+
+    return {
+        "product_category": product_category,
+        "rating_value": rating_value,
+        "reviews": reviews,
+    }
+
 
 def get_global_rating(product_name):
     """Ürünün global değerlendirme bilgilerini döndürür."""
@@ -98,3 +132,14 @@ def get_global_rating(product_name):
             results[base_url] = {"error": str(e)}
 
     return results
+
+# resmi on işle
+def preprocess_image(image_path):
+    """Görseli OCR için işler."""
+    image = cv2.imread(image_path)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Kenarları daha belirgin hale getirmek için eşikleme
+    _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
+
+    return thresh

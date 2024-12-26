@@ -1,3 +1,7 @@
+# Make sure Tesseract OCR is installed on the system.
+# For Windows: https://github.com/UB-Mannheim/tesseract/wiki
+# For Linux (Debian/Ubuntu): sudo apt install tesseract-ocr
+# For MacOS: brew install tesseract
 flask
 torch
 opencv-python
