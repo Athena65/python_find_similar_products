@@ -52,10 +52,11 @@ Ensure the following dependencies are installed:
 
 ```plaintext
 python_find_similar_products/
-├── app.py                 # Flask application
-├── detect.py              # YOLOv8 image detection script
-├── product_rating.py      # Functions for scraping product details and ratings
-├── requirements.txt       # Python dependencies
-├── weights/               # YOLOv8 weight files
-├── static/                # Static assets
-└── README.md              # Project documentation
+├── app.py                        # Flask application
+├── find_category_of_product.py   # Category detection script
+├── get_global_rating_of_product.py # Rating extraction script
+├── requirements.txt              # Python dependencies
+├── weights/                      # Model weights directory
+│   └── yolov8x-oiv7.pt           # YOLOv8 model weights
+├── .gitignore                    # Git ignore file
+└── README.md                     # Project documentation
