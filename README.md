@@ -67,7 +67,7 @@ python_find_similar_products/
 │   └── yolov8x-oiv7.pt           # YOLOv8 model weights
 ├── .gitignore                    # Git ignore file
 └── README.md                     # Project documentation
-
+```
 ## Related Project
 
 This project works in conjunction with the [RatesFromEverywhere2](https://github.com/Athena65/ratesfromeverywhere2) repository. While this project focuses on **image-based category detection**, the related repository specializes in scraping product ratings from multiple e-commerce platforms.
