@@ -1,108 +1,88 @@
-import requests,cv2
-from bs4 import BeautifulSoup
-from selenium import webdriver
+import cv2,pytesseract
 from selenium.webdriver.chrome.options import Options
-import pytesseract
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from bs4 import BeautifulSoup
 
 # URLS to fetch datas
 BASE_URLS = [
-    "https://www.cimri.com/",
     "https://www.trendyol.com/",
-    "https://www.n11.com/"
+    #"https://www.n11.com/"
 ]
 
 
 def get_product_url(base_url, product_name):
     """Ürün adını arayıp ürün detay sayfasının URL'sini alır."""
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
-    }
 
     # Arama URL'si
-    if "cimri" in base_url:
-        search_url = f"{base_url}arama?q={product_name.replace(' ', '+')}"
-        product_class = 'HorizontalProductCard_container__n8bDp'
-    elif "trendyol" in base_url:
-        search_url = f"{base_url}sr?q={product_name.replace(' ', '+')}"
+    if "trendyol" in base_url:
+        """Trendyol'da ürün adını arayıp arama sonucu ilk ürünün detay sayfasının URL'sini alır."""
+        search_url = f"{base_url.strip('/')}/sr?q={product_name.replace(' ', '%20')}"
         product_class = 'p-card-wrppr'
-    elif "n11" in base_url:
-        search_url = f"{base_url}arama?q={product_name.replace(' ', '+')}"
-        product_class = 'pro'
+    #elif "n11" in base_url:
+    #     search_url = f"{base_url}arama?q={product_name.replace(' ', '+')}"
+    #     product_class = 'pro'
     else:
         raise Exception("Desteklenmeyen bir URL")
 
-    # HTML'den ürün linkini al
-    response = requests.get(search_url, headers=headers, timeout=10)
-    soup = BeautifulSoup(response.content, 'html.parser')
+    # Selenium ile HTML'den ürün linkini al
+    options = webdriver.ChromeOptions()
+    options.add_argument('headless')
+    options.add_argument('window-size=1920x1080')
+    options.add_argument("disable-gpu")
+    # OR options.add_argument("--disable-gpu")
 
-    # Ürün detay linkini bul
-    link_element = soup.find('a', {'class': product_class})
-    if link_element:
-        product_link = link_element.get('href')
-    else:
-        raise Exception(f"Ürün linki bulunamadı: {base_url}")
+    driver = webdriver.Chrome()
+    driver.get(search_url)
+    try:
+        # Öğeyi bekle
+        link_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div.p-card-wrppr a"))
+        )
+        product_link = link_element.get_attribute('href')
+    except Exception as e:
+        raise Exception(f"Ürün linki bulunamadı: {str(e)}")
+    finally:
+        driver.quit()
 
     # Tam URL'yi döndür
-    if not product_link.startswith("http"):
+    if product_link and not product_link.startswith("http"):
         return base_url.strip('/') + product_link
-    return product_link
+    elif product_link:
+        return product_link
+    else:
+        raise Exception("Geçerli bir ürün linki bulunamadı.")
 
-
-def capture_screenshot(product_url, output_file='product_screenshot.png'):
-    """Ürün detay sayfasının ekran görüntüsünü kaydeder."""
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Görüntüsüz mod
-    chrome_options.add_argument("--disable-gpu")
-    driver = webdriver.Chrome(options=chrome_options)
-
-    # Sayfayı aç ve ekran görüntüsü al
+def get_product_html(product_url):
+    """
+    Ürün detay sayfasının HTML içeriğini döndürür.
+    """
+    driver = webdriver.Chrome()
     driver.get(product_url)
-    driver.save_screenshot(output_file)
-    driver.quit()
-    return output_file
+    try:
+        # Sayfanın kaynak kodunu al
+        html_content = driver.page_source
+    finally:
+        driver.quit()
 
-def extract_rating_using_text_clues(image_path):
+    return html_content
+
+def extract_rating_from_html(html_content):
     """
-    Görüntüden belirli bir satırı analiz ederek dinamik rating değerini çıkarır.
+    HTML içeriğinden "product-rating-score" sınıfındaki değeri çıkarır.
     """
-    # Tesseract OCR'nin sistemdeki yolunu belirtiyoruz
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+    soup = BeautifulSoup(html_content, 'html.parser')
 
-    # Görseli yükleyin ve griye dönüştürün
-    image = cv2.imread(image_path)
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Rating değerini içeren elementi bul
+    rating_element = soup.find('div', class_='product-rating-score')
+    if rating_element:
+        value_element = rating_element.find('div', class_='value')
+        if value_element:
+            return value_element.text.strip()
 
-    # OCR ile metni çıkarın
-    text = pytesseract.image_to_string(gray, lang='eng')
-    print("OCR Çıktısı:", text)  # Debug için
-
-    # Rating değeri ve yorumları saklamak için değişken
-    rating_value = None
-
-    # Satır bazında işlem yap
-    for line in text.split('\n'):
-        line = line.strip()
-        if not line:
-            continue
-
-        # Sadece "yorum" geçen satırları hedef al
-        if "yorum" in line.lower():
-            try:
-                # Satırdaki sayısal değerlere odaklan
-                parts = line.split()
-                for part in parts:
-                    if part.replace('.', '', 1).isdigit():  # Eğer sayı formatındaysa
-                        rating_value = part
-                        break  # İlk sayıyı bulduktan sonra dur
-            except ValueError as e:
-                print(f"ValueError: {e} - Satır: {line}")
-                continue
-            except Exception as e:
-                print(f"Unexpected Error: {e} - Satır: {line}")
-                continue
-
-    # Eğer değer bulunamazsa None olarak döner
-    return rating_value if rating_value is not None else "Not Found"
+    return "Not Found"
 
 
 def get_global_rating(product_name):
@@ -113,11 +93,11 @@ def get_global_rating(product_name):
             # Ürün detay sayfasının URL'sini al
             product_url = get_product_url(base_url, product_name)
 
-            # Ürün detay sayfasının ekran görüntüsünü al
-            screenshot_path = capture_screenshot(product_url)
+            # Ürün detay sayfasının HTML içeriğini al
+            html_content = get_product_html(product_url)
 
-            # Görüntüden yıldız ve yorum bilgilerini çıkar
-            rating = extract_rating_using_text_clues(screenshot_path)
+            # HTML içeriğinden yıldız bilgisini çıkar
+            rating = extract_rating_from_html(html_content)
             results[base_url] = {"rating": rating}
         except Exception as e:
             results[base_url] = {"error": str(e)}
