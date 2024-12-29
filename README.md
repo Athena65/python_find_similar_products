@@ -28,15 +28,22 @@ Ensure the following dependencies are installed:
    cd python_find_similar_products
    ```
 
-2. **Install Dependencies**:
+2. **Download YOLOv8 Weights**:  
+   Download the YOLOv8 model weights from the [Ultralytics Open Images V7 Documentation](https://docs.ultralytics.com/datasets/detect/open-images-v7/#usage) and save them in the `weights/` directory:  
+   ```bash
+   mkdir -p weights
+   wget https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8x-oiv7.pt -O weights/yolov8x-oiv7.pt
+   ```
+
+3. **Install Dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Set Up ChromeDriver**:
+4. **Set Up ChromeDriver**:
    Ensure ChromeDriver is installed and matches your Chrome browser version.
 
-4. **Run the Application**:
+5. **Run the Application**:
    ```bash
    python app.py
    ```
