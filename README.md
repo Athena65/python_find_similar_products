@@ -1,15 +1,14 @@
-```markdown
 # Image-Based Category Detection with YOLOv8 and Product Rating Extraction
 
-This project combines YOLOv8-based category detection for images with the ability to extract product ratings from two popular e-commerce platforms, **Trendyol** and **Hepsiburada**. It includes a Flask API to manage image uploads and product recommendations, along with Selenium-based scraping for product information and ratings.
+This project combines YOLOv8-based category detection for images with the ability to extract product ratings from multiple e-commerce platforms. It includes a Flask API to manage image uploads and product recommendations, along with Selenium-based scraping for product information and ratings.
 
 ## Features
 
 - **YOLOv8 Integration**: Detect categories from uploaded images with high accuracy.
 - **Flask API**: Manage image uploads and handle product recommendation requests.
-- **Selenium Scraping**: Retrieve product details and ratings from Trendyol and Hepsiburada.
+- **Selenium Scraping**: Retrieve product details and ratings from multiple e-commerce platforms.
 - **Dynamic Product Recommendations**: Match detected categories with relevant products.
-- **Cross-Platform Support**: Extract ratings from Trendyol's `product-rating-score` or Hepsiburada's `JYHIcZ8Z_Gz7VXzxFB96` classes.
+- **Cross-Platform Support**: Extract ratings from various e-commerce platforms to calculate an overall rating.
 
 ## Prerequisites
 
@@ -29,15 +28,22 @@ Ensure the following dependencies are installed:
    cd python_find_similar_products
    ```
 
-2. **Install Dependencies**:
+2. **Download YOLOv8 Weights**:  
+   Download the YOLOv8 model weights from the [Ultralytics Open Images V7 Documentation](https://docs.ultralytics.com/datasets/detect/open-images-v7/#usage) and save them in the `weights/` directory:  
+   ```bash
+   mkdir -p weights
+   wget https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8x-oiv7.pt -O weights/yolov8x-oiv7.pt
+   ```
+
+3. **Install Dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Set Up ChromeDriver**:
+4. **Set Up ChromeDriver**:
    Ensure ChromeDriver is installed and matches your Chrome browser version.
 
-4. **Run the Application**:
+5. **Run the Application**:
    ```bash
    python app.py
    ```
@@ -53,41 +59,27 @@ Ensure the following dependencies are installed:
 
 ```plaintext
 python_find_similar_products/
-├── app.py                 # Flask application
-├── detect.py              # YOLOv8 image detection script
-├── product_rating.py      # Functions for scraping product details and ratings
-├── requirements.txt       # Python dependencies
-├── weights/               # YOLOv8 weight files
-├── static/                # Static assets
-└── README.md              # Project documentation
+├── app.py                        # Flask application
+├── find_category_of_product.py   # Category detection script
+├── get_global_rating_of_product.py # Rating extraction script
+├── requirements.txt              # Python dependencies
+├── weights/                      # Model weights directory
+│   └── yolov8x-oiv7.pt           # YOLOv8 model weights
+├── .gitignore                    # Git ignore file
+└── README.md                     # Project documentation
 ```
+## Related Project
 
-## Example: Extracting Product Rating
+This project works in conjunction with the [RatesFromEverywhere2](https://github.com/Athena65/ratesfromeverywhere2) repository. While this project focuses on **image-based category detection**, the related repository specializes in scraping product ratings from multiple e-commerce platforms.
 
-The following steps illustrate how the project fetches product ratings:
+### How It Works:
 
-1. Call `get_product_url` with the base URL and product name:
-   ```python
-   base_url = "https://www.hepsiburada.com/"
-   product_name = "Apple iPhone 13"
-   product_url = get_product_url(base_url, product_name)
-   ```
+1. **Image-Based Category Detection**:  
+   Users can upload images of products to this project. The system processes the images using YOLOv8 to detect relevant categories, which are then used for product recommendations.
 
-2. Use Selenium to load the product page and extract the HTML:
-   ```python
-   chrome_options = get_chrome_options()
-   driver = webdriver.Chrome(options=chrome_options)
-   driver.get(product_url)
-   time.sleep(5)
-   html_content = driver.page_source
-   driver.quit()
-   ```
+2. **Product Rating Integration**:  
+   The project communicates with the **RatesFromEverywhere2** repository to retrieve product ratings from two different e-commerce platforms. The ratings from these platforms are averaged to provide a general rating value for the detected categories.
 
-3. Pass the HTML content to `extract_rating_from_html`:
-   ```python
-   rating = extract_rating_from_html(html_content, base_url)
-   print("Rating:", rating)
-   ```
+This combined functionality ensures accurate category detection and integrates user-friendly rating insights into the recommendation process.
 
-The system dynamically selects the appropriate scraping method for Trendyol or Hepsiburada, ensuring flexible and accurate rating retrieval.
-```
+You can explore more about the **RatesFromEverywhere2** repository [here](https://github.com/Athena65/ratesfromeverywhere2).
