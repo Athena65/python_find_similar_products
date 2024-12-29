@@ -1,4 +1,4 @@
-import cv2,pytesseract
+import cv2,pytesseract, time
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -12,6 +12,30 @@ BASE_URLS = [
     #"https://www.n11.com/"
 ]
 
+def get_chrome_options():
+    """
+    Chrome için gerekli Selenium ayarlarını döndürür.
+    """
+    chrome_options = Options()
+    chrome_options.add_argument('--headless')  # Arka planda çalıştır
+    chrome_options.add_argument('--disable-gpu')  # GPU'yu devre dışı bırak
+    chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')  # Bellek sorunları için
+    chrome_options.add_argument("start-maximized")
+    chrome_options.add_argument("enable-automation")
+    chrome_options.add_argument("--disable-infobars")
+    chrome_options.add_argument("window-size=1920,1080")
+    chrome_options.add_argument('--disable-browser-side-navigation')
+    chrome_options.add_argument('--disable-extensions')
+    chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])
+    chrome_options.add_experimental_option('useAutomationExtension', False)
+
+    # Gerçekçi bir User-Agent
+    chrome_options.add_argument(
+        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
+
+    return chrome_options
 
 def get_product_url(base_url, product_name):
     """Ürün adını arayıp ürün detay sayfasının URL'sini alır."""
@@ -27,18 +51,22 @@ def get_product_url(base_url, product_name):
     else:
         raise Exception("Desteklenmeyen bir URL")
 
-    # Selenium ile HTML'den ürün linkini al
-    options = webdriver.ChromeOptions()
-    options.add_argument('headless')
-    options.add_argument('window-size=1920x1080')
-    options.add_argument("disable-gpu")
-    # OR options.add_argument("--disable-gpu")
+    # Selenium ayarları
+    chrome_options = get_chrome_options()
 
-    driver = webdriver.Chrome()
+    driver = webdriver.Chrome(chrome_options)
+    driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+        'source': "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+    })
+
     driver.get(search_url)
+
     try:
+        # Cloudflare için bekleme
+        time.sleep(10)  # Sayfanın tamamen yüklenmesi için sabit bekleme
+
         # Öğeyi bekle
-        link_element = WebDriverWait(driver, 10).until(
+        link_element = WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.p-card-wrppr a"))
         )
         product_link = link_element.get_attribute('href')
@@ -59,7 +87,13 @@ def get_product_html(product_url):
     """
     Ürün detay sayfasının HTML içeriğini döndürür.
     """
-    driver = webdriver.Chrome()
+    chrome_options = get_chrome_options()
+
+    driver = webdriver.Chrome(chrome_options)
+    driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+        'source': "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+    })
+
     driver.get(product_url)
     try:
         # Sayfanın kaynak kodunu al
