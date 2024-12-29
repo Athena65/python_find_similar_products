@@ -1,4 +1,3 @@
-```markdown
 # Image-Based Category Detection with YOLOv8 and Product Rating Extraction
 
 This project combines YOLOv8-based category detection for images with the ability to extract product ratings from two popular e-commerce platforms, **Trendyol** and **Hepsiburada**. It includes a Flask API to manage image uploads and product recommendations, along with Selenium-based scraping for product information and ratings.
@@ -60,34 +59,3 @@ python_find_similar_products/
 ├── weights/               # YOLOv8 weight files
 ├── static/                # Static assets
 └── README.md              # Project documentation
-```
-
-## Example: Extracting Product Rating
-
-The following steps illustrate how the project fetches product ratings:
-
-1. Call `get_product_url` with the base URL and product name:
-   ```python
-   base_url = "https://www.hepsiburada.com/"
-   product_name = "Apple iPhone 13"
-   product_url = get_product_url(base_url, product_name)
-   ```
-
-2. Use Selenium to load the product page and extract the HTML:
-   ```python
-   chrome_options = get_chrome_options()
-   driver = webdriver.Chrome(options=chrome_options)
-   driver.get(product_url)
-   time.sleep(5)
-   html_content = driver.page_source
-   driver.quit()
-   ```
-
-3. Pass the HTML content to `extract_rating_from_html`:
-   ```python
-   rating = extract_rating_from_html(html_content, base_url)
-   print("Rating:", rating)
-   ```
-
-The system dynamically selects the appropriate scraping method for Trendyol or Hepsiburada, ensuring flexible and accurate rating retrieval.
-```
