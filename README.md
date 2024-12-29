@@ -1,14 +1,14 @@
 # Image-Based Category Detection with YOLOv8 and Product Rating Extraction
 
-This project combines YOLOv8-based category detection for images with the ability to extract product ratings from two popular e-commerce platforms, **Trendyol** and **Hepsiburada**. It includes a Flask API to manage image uploads and product recommendations, along with Selenium-based scraping for product information and ratings.
+This project combines YOLOv8-based category detection for images with the ability to extract product ratings from multiple e-commerce platforms. It includes a Flask API to manage image uploads and product recommendations, along with Selenium-based scraping for product information and ratings.
 
 ## Features
 
 - **YOLOv8 Integration**: Detect categories from uploaded images with high accuracy.
 - **Flask API**: Manage image uploads and handle product recommendation requests.
-- **Selenium Scraping**: Retrieve product details and ratings from Trendyol and Hepsiburada.
+- **Selenium Scraping**: Retrieve product details and ratings from multiple e-commerce platforms.
 - **Dynamic Product Recommendations**: Match detected categories with relevant products.
-- **Cross-Platform Support**: Extract ratings from Trendyol's `product-rating-score` or Hepsiburada's `JYHIcZ8Z_Gz7VXzxFB96` classes.
+- **Cross-Platform Support**: Extract ratings from various e-commerce platforms to calculate an overall rating.
 
 ## Prerequisites
 
@@ -67,3 +67,19 @@ python_find_similar_products/
 │   └── yolov8x-oiv7.pt           # YOLOv8 model weights
 ├── .gitignore                    # Git ignore file
 └── README.md                     # Project documentation
+
+## Related Project
+
+This project works in conjunction with the [RatesFromEverywhere2](https://github.com/Athena65/ratesfromeverywhere2) repository. While this project focuses on **image-based category detection**, the related repository specializes in scraping product ratings from multiple e-commerce platforms.
+
+### How It Works:
+
+1. **Image-Based Category Detection**:  
+   Users can upload images of products to this project. The system processes the images using YOLOv8 to detect relevant categories, which are then used for product recommendations.
+
+2. **Product Rating Integration**:  
+   The project communicates with the **RatesFromEverywhere2** repository to retrieve product ratings from two different e-commerce platforms. The ratings from these platforms are averaged to provide a general rating value for the detected categories.
+
+This combined functionality ensures accurate category detection and integrates user-friendly rating insights into the recommendation process.
+
+You can explore more about the **RatesFromEverywhere2** repository [here](https://github.com/Athena65/ratesfromeverywhere2).
