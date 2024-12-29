@@ -1,7 +1,3 @@
-Aşağıda, README dosyasını temiz ve düzenli bir şekilde düzenlenmiş haliyle sunuyorum:
-
----
-
 # Image-Based Category Detection with YOLOv3
 
 This project uses YOLOv3 to detect categories from images and integrates these detections into a product recommendation system via a Flask API.
