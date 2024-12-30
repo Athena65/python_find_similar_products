@@ -11,6 +11,7 @@ def process_image_route():
     """
     Endpoint to process an image and return the detected category.
     """
+    app.logger.info('POST request received at /process-image')
     if 'image' not in request.files:
         app.logger.error('No image provided in the request.')
         return jsonify({'categories': []}), 200
@@ -18,20 +19,23 @@ def process_image_route():
     file = request.files['image']
 
     try:
+        app.logger.info('Image processing started.')
         best_category_ids, best_category, results = process_image(file)
+
+        if not best_category:
+            app.logger.info('No matching category found.')
+            return jsonify({'categories': [], 'yolo_output': str(results)}), 200
+
+        app.logger.info(f'Best category detected: {best_category}')
+        return jsonify({'categories': [best_category_ids], 'yolo_output': str(results)})
+
     except ValueError as e:
         app.logger.error(f'Image processing error: {e}')
         return jsonify({'categories': []}), 200
+
     except Exception as e:
         app.logger.error(f'Error during YOLOv8 inference: {e}')
         return jsonify({'categories': []}), 200
-
-    if not best_category:
-        app.logger.info('No matching category found.')
-        return jsonify({'categories': [], 'yolo_output': str(results)}), 200
-
-    app.logger.info(f'Best category detected: {best_category}')
-    return jsonify({'categories': [best_category_ids], 'yolo_output': str(results)})
 
 
 # global rating
