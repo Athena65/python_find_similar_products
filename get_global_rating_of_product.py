@@ -1,4 +1,4 @@
-import cv2,pytesseract, time
+import time
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 from selenium.webdriver.common.by import By
