@@ -19,7 +19,7 @@ def process_image(file):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     # Perform YOLOv8 inference
-    results = model.predict(img, conf=0.25, iou=0.45)
+    results = model.predict(img, conf=0.25, iou=0.45) # 0.25 trust , 0.45 Intersection over union
 
     # Process YOLOv8 predictions
     detected_category_ids = []  # category id to return

@@ -18,7 +18,7 @@ def get_chrome_options():
     """
     chrome_options = Options()
     arguments = [
-        '--headless',
+        '--headless', # kullanıcı chrome un açıldığını görmesin
         '--disable-gpu',
         '--disable-blink-features=AutomationControlled',
         '--no-sandbox',
@@ -30,6 +30,7 @@ def get_chrome_options():
         '--disable-browser-side-navigation',
         '--disable-extensions',
         "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+        '--enable-unsafe-swiftshader'
     ]
     for arg in arguments:
         chrome_options.add_argument(arg)
